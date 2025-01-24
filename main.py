@@ -29,6 +29,12 @@ def load_and_transform_data():
     # total 삭제
     df_long = df_long[df_long["gender"] != "total"]
 
+    # 나이대 이름을 변경 (추가적으로 명확히 표시)
+    df_long["age_group"] = df_long["age_group"].replace({
+        "50~64": "50-64세",
+        "65 이상": "65세 이상"
+    })
+
     return df_long
 
 # 데이터 로드 및 변환
