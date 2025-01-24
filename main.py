@@ -1,45 +1,94 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 import koreanize_matplotlib  # 한글 폰트 지원
+import matplotlib.pyplot as plt
 
 # 데이터 경로
-DATA_PATH = "daily_temp.csv"
+DATA_PATH = "colon cancer"
 
 # 데이터 로드 및 전처리 함수
 @st.cache_data
-def load_and_clean_data(path):
-    data = pd.read_csv(path)
-    # 1. 날짜 열의 공백 제거 및 날짜 형식 변환
-    data['날짜'] = pd.to_datetime(data['날짜'].str.strip(), format="%Y-%m-%d", errors='coerce')
-    
-    # 2. 월 열 추가
-    data['월'] = data['날짜'].dt.month
-    
-    # 3. 결측치 처리 (평균기온이 없는 행 제거)
-    data = data.dropna(subset=['평균기온(℃)'])
-    
-    return data
+def load_data(path):
+    try:
+        # 데이터 로드
+        data = pd.read_csv(path)
+        return data
+    except Exception as e:
+        st.error(f"데이터를 로드하는 데 문제가 발생했습니다: {e}")
+        return None
 
 # 데이터 로드
-data = load_and_clean_data(DATA_PATH)
+data = load_data(DATA_PATH)
 
-# 제목과 설명 추가
-st.title("월별 기온 분포 박스플롯")
-st.write("월을 선택하면 해당 월의 평균 기온 분포를 박스플롯으로 확인할 수 있습니다.")
+if data is not None:
+    st.title("대장암 수진율 분석")
+    st.write("2010년, 2012년, 2014년 데이터를 기반으로 교육수준, 직업, 지역별로 대장암 수진율 평균을 비교합니다.")
 
-# 월 선택 위젯
-selected_month = st.selectbox("월을 선택하세요:", sorted(data['월'].dropna().unique()))
+    # 연도 선택
+    selected_years = [2010, 2012, 2014]
+    filtered_data = data[data["year"].isin(selected_years)]
 
-# 선택한 월의 데이터 필터링
-month_data = data[data['월'] == selected_month]
+    # 교육수준별 수진율 비교
+    st.subheader("교육수준별 대장암 수진율 평균")
+    education_mean = (
+        filtered_data.groupby(["education_level", "year"])["screening_rate"].mean().reset_index()
+    )
+    st.write(education_mean)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for level in education_mean["education_level"].unique():
+        subset = education_mean[education_mean["education_level"] == level]
+        ax.plot(
+            subset["year"],
+            subset["screening_rate"],
+            marker="o",
+            label=f"교육수준: {level}",
+        )
+    ax.set_title("교육수준별 대장암 수진율 평균 변화")
+    ax.set_xlabel("연도")
+    ax.set_ylabel("수진율 평균")
+    ax.legend()
+    st.pyplot(fig)
 
-# 박스플롯 그리기
-if not month_data.empty:
-    fig, ax = plt.subplots(figsize=(8, 5))  # 그래프 크기 조정
-    ax.boxplot(month_data['평균기온(℃)'], vert=True, patch_artist=True, labels=[f"{selected_month}월"])
-    ax.set_title(f"{selected_month}월의 평균 기온 분포", fontsize=14)
-    ax.set_ylabel("기온 (℃)", fontsize=12)
-    st.pyplot(fig)  # Streamlit에서 그래프 출력
+    # 직업별 수진율 비교
+    st.subheader("직업별 대장암 수진율 평균")
+    occupation_mean = (
+        filtered_data.groupby(["occupation", "year"])["screening_rate"].mean().reset_index()
+    )
+    st.write(occupation_mean)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for job in occupation_mean["occupation"].unique():
+        subset = occupation_mean[occupation_mean["occupation"] == job]
+        ax.plot(
+            subset["year"],
+            subset["screening_rate"],
+            marker="o",
+            label=f"직업: {job}",
+        )
+    ax.set_title("직업별 대장암 수진율 평균 변화")
+    ax.set_xlabel("연도")
+    ax.set_ylabel("수진율 평균")
+    ax.legend()
+    st.pyplot(fig)
+
+    # 지역별 수진율 비교
+    st.subheader("지역별 대장암 수진율 평균")
+    region_mean = (
+        filtered_data.groupby(["region", "year"])["screening_rate"].mean().reset_index()
+    )
+    st.write(region_mean)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for region in region_mean["region"].unique():
+        subset = region_mean[region_mean["region"] == region]
+        ax.plot(
+            subset["year"],
+            subset["screening_rate"],
+            marker="o",
+            label=f"지역: {region}",
+        )
+    ax.set_title("지역별 대장암 수진율 평균 변화")
+    ax.set_xlabel("연도")
+    ax.set_ylabel("수진율 평균")
+    ax.legend()
+    st.pyplot(fig)
 else:
-    st.warning("선택한 월에 해당하는 데이터가 없습니다.")
+    st.warning("데이터를 로드할 수 없습니다. 데이터 경로를 확인해주세요.")
