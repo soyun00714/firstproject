@@ -78,3 +78,57 @@ plt.grid(True, linestyle='--', alpha=0.6)  # 격자 추가
 
 # 그래프 출력
 st.pyplot(fig)
+
+import pandas as pd
+from scipy.stats import f_oneway
+
+# Define the raw data
+raw_data = {
+    "year": ["2010", "2010", "2010", "2012", "2012", "2012", "2014", "2014", "2014"],
+    "gender": ["total", "male", "female", "total", "male", "female", "total", "male", "female"],
+    "50~64": [36.7, 41.1, 32.8, 46.5, 49.6, 43.7, 49.9, 53.4, 46.8],
+    "65 이상": [28.9, 37.1, 22.3, 40.4, 46.6, 35.4, 47.2, 54.5, 41.2],
+}
+
+# Create a DataFrame
+df = pd.DataFrame(raw_data)
+
+# Transform data to long format
+df_long = pd.melt(
+    df,
+    id_vars=["year", "gender"],
+    value_vars=["50~64", "65 이상"],
+    var_name="age_group",
+    value_name="screening_rate",
+)
+
+# Remove "total" from gender
+df_long = df_long[df_long["gender"] != "total"]
+
+# Rename age groups for clarity
+df_long["age_group"] = df_long["age_group"].replace({"50~64": "50-64세", "65 이상": "65세 이상"})
+
+# --- PART 1: Analyze differences between years ---
+# Group data by year and extract screening rates for ANOVA
+year_groups = [df_long[df_long["year"] == year]["screening_rate"] for year in df_long["year"].unique()]
+
+# Perform ANOVA across years
+anova_year_result = f_oneway(*year_groups)
+print(f"ANOVA p-value for differences across years: {anova_year_result.pvalue}")
+
+# --- PART 2: Analyze differences between the 4 groups within each year ---
+group_results = {}
+for year in df_long["year"].unique():
+    group_50_64_male = df_long[(df_long["year"] == year) & (df_long["age_group"] == "50-64세") & (df_long["gender"] == "male")]["screening_rate"]
+    group_50_64_female = df_long[(df_long["year"] == year) & (df_long["age_group"] == "50-64세") & (df_long["gender"] == "female")]["screening_rate"]
+    group_65_male = df_long[(df_long["year"] == year) & (df_long["age_group"] == "65세 이상") & (df_long["gender"] == "male")]["screening_rate"]
+    group_65_female = df_long[(df_long["year"] == year) & (df_long["age_group"] == "65세 이상") & (df_long["gender"] == "female")]["screening_rate"]
+    
+    # Perform ANOVA for the 4 groups within the year
+    anova_group_result = f_oneway(group_50_64_male, group_50_64_female, group_65_male, group_65_female)
+    group_results[year] = anova_group_result.pvalue
+
+# Print group results
+for year, pvalue in group_results.items():
+    print(f"ANOVA p-value for 4 groups in year {year}: {pvalue}")
+
