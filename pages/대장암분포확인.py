@@ -53,23 +53,4 @@ st.dataframe(gender_age_mean)
 
 # 그래프 출력
 st.subheader("연도별 남녀 나이대별 대장암 수진율 평균 비교 그래프")
-fig, ax = plt.subplots(figsize=(12, 6))
-
-# 나이대별, 성별로 데이터 시각화
-for age_group in gender_age_mean["age_group"].unique():
-    for gender in gender_age_mean["gender"].unique():
-        subset = gender_age_mean[(gender_age_mean["age_group"] == age_group) & (gender_age_mean["gender"] == gender)]
-        ax.plot(
-            subset["year"],
-            subset["screening_rate"],
-            marker="o",
-            label=f"{age_group} - {gender}",
-        )
-
-# 그래프 설정
-ax.set_title("연도별 남녀 나이대별 대장암 수진율 평균 비교")
-ax.set_xlabel("연도")
-ax.set_ylabel("수진율 평균")
-ax.legend(loc="upper left", bbox_to_anchor=(1.05, 1), title="나이대 - 성별")
-st.pyplot(fig)
-
+fig, ax = plt.subplots(figsize=(14, 8))  # 그래프 크기 조정
