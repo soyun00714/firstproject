@@ -26,13 +26,16 @@ def load_and_transform_data():
         value_name="screening_rate",
     )
 
+    # total 삭제
+    df_long = df_long[df_long["gender"] != "total"]
+
     return df_long
 
 # 데이터 로드 및 변환
 data = load_and_transform_data()
 
 # Streamlit 앱
-st.title("연도별 남녀 대장암 수진율 평균 비교")
+st.title("연도별 남녀 대장암 수진율 평균 비교 (Total 제외)")
 st.write("남성과 여성의 연도별 대장암 수진율 평균을 비교합니다.")
 
 # 남녀 평균 계산
@@ -53,7 +56,7 @@ for gender in gender_mean["gender"].unique():
         marker="o",
         label=f"성별: {gender}",
     )
-ax.set_title("연도별 남녀 대장암 수진율 평균 비교")
+ax.set_title("연도별 남녀 대장암 수진율 평균 비교 (Total 제외)")
 ax.set_xlabel("연도")
 ax.set_ylabel("수진율 평균")
 ax.legend()
