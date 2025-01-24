@@ -35,28 +35,35 @@ def load_and_transform_data():
 data = load_and_transform_data()
 
 # Streamlit 앱
-st.title("연도별 남녀 대장암 수진율 평균 비교 (Total 제외)")
-st.write("남성과 여성의 연도별 대장암 수진율 평균을 비교합니다.")
+st.title("연도별 남녀 나이대별 대장암 수진율 평균 비교")
+st.write("연도별, 성별, 나이대별 대장암 수진율 평균을 비교합니다.")
 
-# 남녀 평균 계산
-gender_mean = data.groupby(["year", "gender"])["screening_rate"].mean().reset_index()
+# 나이대 선택
+age_groups = data["age_group"].unique()
+selected_age_group = st.selectbox("나이대를 선택하세요:", age_groups)
+
+# 선택한 나이대 데이터 필터링
+filtered_data = data[data["age_group"] == selected_age_group]
+
+# 성별 및 연도별 평균 계산
+gender_age_mean = filtered_data.groupby(["year", "gender"])["screening_rate"].mean().reset_index()
 
 # 데이터프레임 출력
-st.write("연도별 남녀 대장암 수진율 평균:")
-st.dataframe(gender_mean)
+st.write(f"연도별 남녀 대장암 수진율 평균 (나이대: {selected_age_group}):")
+st.dataframe(gender_age_mean)
 
 # 그래프 출력
-st.subheader("연도별 남녀 대장암 수진율 평균 비교 그래프")
+st.subheader(f"연도별 남녀 대장암 수진율 평균 비교 (나이대: {selected_age_group})")
 fig, ax = plt.subplots(figsize=(10, 6))
-for gender in gender_mean["gender"].unique():
-    subset = gender_mean[gender_mean["gender"] == gender]
+for gender in gender_age_mean["gender"].unique():
+    subset = gender_age_mean[gender_age_mean["gender"] == gender]
     ax.plot(
         subset["year"],
         subset["screening_rate"],
         marker="o",
         label=f"성별: {gender}",
     )
-ax.set_title("연도별 남녀 대장암 수진율 평균 비교 (Total 제외)")
+ax.set_title(f"연도별 남녀 대장암 수진율 평균 비교 (나이대: {selected_age_group})")
 ax.set_xlabel("연도")
 ax.set_ylabel("수진율 평균")
 ax.legend()
