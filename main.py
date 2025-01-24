@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import koreanize_matplotlib  # 한글 폰트 지원
 
 # 데이터 경로
-DATA_PATH = "colon cancer"
+DATA_PATH = "colon cancer.csv"
 
 # 데이터 로드 및 전처리 함수
 @st.cache_data
